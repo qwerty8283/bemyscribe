@@ -48,8 +48,6 @@ export class TokenInterceptorService implements HttpInterceptor{
     map((event: HttpEvent<any>) => {
       if (event instanceof HttpResponse) {
           console.log('event--->>>', event);
-          alert();
-           this.presentToast('Login failed');
       }
       return event;
     }),
@@ -65,11 +63,11 @@ export class TokenInterceptorService implements HttpInterceptor{
     }));
     }
     async presentToast(msg) {
-  const toast = await this.toastController.create({
+    const toast = await this.toastController.create({
     message: msg,
     duration: 2000,
     position: 'top'
-  });
-  toast.present();
+    });
+    toast.present();
 }
 }

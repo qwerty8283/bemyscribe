@@ -1,5 +1,7 @@
+//simport { map } from 'rxjs/operators';
 import { ApiServiceService } from './../../services/api/api-service.service';
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
@@ -7,25 +9,31 @@ import { Component, OnInit } from '@angular/core';
 })
 export class LoginPage implements OnInit {
 
-    constructor(private api:ApiServiceService) { }
+    constructor(private api:ApiServiceService, private router: Router) { }
     user: any = {};
     ngOnInit() {
         this.user = {
             loader: false,
             data: {
-                email: '',
+                username: '',
                 password: '',
             }
         }
     }
-    login() {
-        //console.log(this.user);
+    login():void {
         this.user.loader = true;
+        let token = '';
         this.api.post("/auth", this.user.data).subscribe((res: any) => {
             this.user.loader = false;
-            alert("1");
-            console.log(res);
+            if (res.access_token != undefined) {
+                localStorage.setItem('token', res.access_token);
+                this.router.navigate(['/auth']);
+            } else {
+                alert("Invalid Credentials");
+            }
         });
+        
+        this.user.loader = false;
     }
 
 }
