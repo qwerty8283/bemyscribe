@@ -10,14 +10,14 @@ const routes: Routes = [
         path: 'login',
         loadChildren: () => import('./auth/login/login.module').then(m => m.LoginPageModule)
     },
-    {
-        path: 'scribe-seeker',
-        loadChildren: () => import('./auth/registration/scribe-seeker/scribe-seeker.module').then(m => m.ScribeSeekerPageModule)
-    },
-    {
-        path: 'scribe-volunteer',
-        loadChildren: () => import('./auth/registration/scribe-volunteer/scribe-volunteer.module').then(m => m.ScribeVolunteerPageModule)
-    },
+    // {
+    //     path: 'scribe-seeker',
+    //     loadChildren: () => import('./auth/registration/scribe-seeker/scribe-seeker.module').then(m => m.ScribeSeekerPageModule)
+    // },
+    // {
+    //     path: 'scribe-volunteer',
+    //     loadChildren: () => import('./auth/registration/scribe-volunteer/scribe-volunteer.module').then(m => m.ScribeVolunteerPageModule)
+    // },
     {
         path: 'forgotpassword',
         loadChildren: () => import('./auth/forgotpassword/forgotpassword.module').then(m => m.ForgotpasswordPageModule)

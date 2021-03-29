@@ -27,7 +27,7 @@ export class LoginPage implements OnInit {
             this.user.loader = false;
             if (res.access_token != undefined) {
                 localStorage.setItem('token', res.access_token);
-                this.router.navigate(['/auth']);
+                this.router.navigate(['/scribe-volunteer']);
             } else {
                 alert("Invalid Credentials");
             }
