@@ -27,7 +27,15 @@ export class LoginPage implements OnInit {
             this.user.loader = false;
             if (res.access_token != undefined) {
                 localStorage.setItem('token', res.access_token);
-                this.router.navigate(['/scribe-volunteer']);
+                localStorage.setItem('email', this.user.data.username);
+                this.api.get("/examDashboard/"+this.user.data.username).subscribe((role: any) => {
+                    if (role == "volunteer") {
+                       this.router.navigate(['/scribe-volunteer']);
+                    } else {
+                        this.router.navigate(['/scribe-seeker']);
+                    }
+                });
+               
             } else {
                 alert("Invalid Credentials");
             }

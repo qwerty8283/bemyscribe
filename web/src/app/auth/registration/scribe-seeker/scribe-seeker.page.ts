@@ -52,7 +52,7 @@ export class ScribeSeekerPage implements OnInit {
             this.seeker.data.name = this.registrationForm.controls['name'].value;
             this.seeker.data.email = this.registrationForm.controls['email'].value;
             this.seeker.data.password = this.registrationForm.get('passwords').get('password').value;
-            this.seeker.data.mobile = this.registrationForm.controls['name'].value;
+            this.seeker.data.mobile = this.registrationForm.controls['mobileno'].value;
             this.api.post("/disabledRegister", this.seeker.data).subscribe((res: any) => {
                 if (Object.keys(res).length == 3) {
                     alert("Registered Successfully");

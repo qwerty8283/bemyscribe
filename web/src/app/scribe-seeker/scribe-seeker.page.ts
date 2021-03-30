@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ApiServiceService } from '../services/api/api-service.service';
 
 @Component({
   selector: 'app-scribe-seeker',
@@ -7,10 +8,17 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ScribeSeekerPage implements OnInit {
   examList = []; //  integrate with service
+ email: string = '';
+    constructor(private api: ApiServiceService) {
+      this.email = localStorage.getItem('email');
+   }
 
-  constructor() { }
-
-  ngOnInit() {
+    ngOnInit() {
+        this.getData();
   }
-
+    getData() {
+        this.api.get("/disabledExamDashboard/"+this.email).subscribe((res: any) => {
+            this.examList = res;
+        });
+    }
 }

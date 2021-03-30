@@ -30,6 +30,8 @@ migrate = Migrate(app,db)
 def authenticate(email, password):
 	if bool(Disabled.query.filter_by(email = email).first()):
 		user = Disabled.query.filter_by(email = email).first()
+		if user and safe_str_cmp(user.password, password):
+			return user
 	else:
 		user = Volunteer.query.filter_by(email = email).first()
 		if user and safe_str_cmp(user.password, password):
@@ -64,7 +66,7 @@ class Disabled(db.Model):
 	def check_password(self,password):
 		return check_password_hash(self.password,password)
 	def json(self):
-		return {"name":self.name,"email":self.email,"mobile":self.mobile}
+		return {"id":self.id,"name":self.name,"email":self.email,"mobile":self.mobile}
 	def __repr__(self):
 		return f"Person who needs Scribe: {self.name}    "
 
@@ -126,7 +128,7 @@ class Exam(db.Model):
 	disabled_id = db.Column(db.String(255)) #db.Column(db.Integer,db.ForeignKey('disabled.id'))
 	volunteer_id = db.Column(db.String(255)) #db.Column(db.Integer,db.ForeignKey('volunteer.id'))
 	#status =  db.Column(db.String(10))
-	def __init__(self,exam_name,exam_date,exam_start_time,exam_end_time,exam_centre_addr,exam_city,exam_area_pincode,skills_preference,gender_preference,language_preference,disabled_id):
+	def __init__(self,exam_name,exam_date,exam_start_time,exam_end_time,exam_centre_addr,exam_city,exam_area_pincode,skills_preference,gender_preference,language_preference,disabled_id,volunteer_id):
 		self.exam_name = exam_name	
 		self.exam_date = exam_date
 		self.exam_start_time = exam_start_time
@@ -138,10 +140,10 @@ class Exam(db.Model):
 		self.gender_preference = gender_preference
 		self.language_preference = language_preference
 		self.disabled_id = disabled_id
-		#self.volunteer_id = volunteer_id
+		self.volunteer_id = volunteer_id
 		#self.status = "Active"
 	def json(self):
-		return {"exam_name":self.exam_name,"exam_date":self.exam_date,"exam_start_time":self.exam_start_time,"exam_end_time":self.exam_end_time,"exam_centre_addr":self.exam_centre_addr,"exam_city":self.exam_city,"exam_area_pincode":self.exam_area_pincode}
+		return {"disabled_id":self.disabled_id,"name":(Disabled.query.get(self.disabled_id)).name,"exam_name":self.exam_name,"exam_date":self.exam_date,"exam_start_time":self.exam_start_time,"exam_end_time":self.exam_end_time,"exam_centre_addr":self.exam_centre_addr,"exam_city":self.exam_city,"exam_area_pincode":self.exam_area_pincode,"exam_request_status":self.exam_request_status}
 	def __repr__(self):
 		return f"Application ID: {self.id} ------ Disabled person ID: {self.disabled_id} ---- Volunteer ID: {self.volunteer_id}"
 
@@ -191,6 +193,7 @@ class VolunteerResponseSchema(Schema):
 	highest_degree=fields.Str(default='Success')
 
 class DisableResponseSchema(Schema):
+	id = fields.Str(default='Success')
 	name = fields.Str(default='Success')
 	email = fields.Str(default='Success')
 	mobile = fields.Str(default='Success')
@@ -258,10 +261,10 @@ class DisabledRegister(Resource):
 		return disabled_user.json()
 
 #volunteerregister
-class VolunteerRegister(MethodResource, Resource):
-	@doc(description='Add new volunteer API.', tags=['Vounteer'])
-	@use_kwargs(VounteerRequestSchema, location=('json'))
-	@marshal_with(VolunteerResponseSchema)  # marshalling with marshmallow library
+class VolunteerRegister(Resource):
+	#@doc(description='Add new volunteer API.', tags=['Vounteer'])
+	#@use_kwargs(VounteerRequestSchema, location=('json'))
+	#@marshal_with(VolunteerResponseSchema)  # marshalling with marshmallow library
 	def post(self):
 		data = request.get_json()
 		name = data["name"]
@@ -294,10 +297,10 @@ class DisabledResource(MethodResource, Resource):
 			return {'email':'not found'}, 404
 
 #Create/Assign Exams
-class ExamApi(MethodResource, Resource):
-	@doc(description='Add new exam API.', tags=['Exam'])
-	@use_kwargs(ExamRequestSchema, location=('json'))
-	@marshal_with(ExamResponseSchema)  # marshalling with marshmallow library
+class ExamApi(Resource):
+	#@doc(description='Add new exam API.', tags=['Exam'])
+	#@use_kwargs(ExamRequestSchema, location=('json'))
+	#@marshal_with(ExamResponseSchema)  # marshalling with marshmallow library
 	def post(self):
 		data = request.get_json()		
 		exam_name = data["exam_name"]
@@ -327,9 +330,21 @@ api.add_resource(ExamApi,'/saveExam')
 # Add newly created api to swagger docs
 docs = FlaskApiSpec(app)
 docs.register(DisabledResource)
-docs.register(VolunteerRegister)
-docs.register(ExamApi)
+#docs.register(VolunteerRegister)
+#docs.register(ExamApi)
 
+
+#exam dasboard get request
+class ExamDashboard(Resource):
+	@jwt_required()
+	def get(self,email):
+		if bool(Disabled.query.filter_by(email = email).first()):
+			return "disabled"
+		else:
+			return"volunteer"
+
+
+api.add_resource(ExamDashboard,'/examDashboard/<email>')
 
 # Creating a Get request for exam dashboard for Disabled
 class DisabledExamDashboard(Resource):
@@ -347,9 +362,13 @@ class VolunteerExamDashboard(Resource):
 		volunteer_user = Volunteer.query.filter_by(email = email).first()
 		id_of_volunteer = volunteer_user.id
 		exams_list = Exam.query.filter((Exam.volunteer_id == id_of_volunteer) & (Exam.exam_request_status == "open")).all()
+		name_json = {}
+
 		return [exam.json() for exam in exams_list]
 
 api.add_resource(DisabledExamDashboard,'/disabledExamDashboard/<email>')
 api.add_resource(VolunteerExamDashboard,'/volunteerExamDashboard/<string:email>')
+
+
 
 app.run(port=5000,debug=True)
